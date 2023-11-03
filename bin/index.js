@@ -32,15 +32,19 @@ async function  getBookHref(url) {
  */
 async function getBookContent(url, contentLog = false) {
     const bookHref = await getBookHref(url)
-    for(let i = 0; i < bookHref.length; i++) {
+    for(let i = 0, nm = '', index = 1; i < bookHref.length; i++, index++) {
         console.log('爬取链接：' + bookHref[i]);
         let res = await getGBKResolveHtml(bookHref[i], 'get', headers)
         // console.log(res);
         const $ =  cheerio.load(res) 
         // let name =  Buffer.from($('#mlfy_main_text h1').text(), 'GBK').toString()
         // let name = iconv.decode($('#mlfy_main_text h1').text(), 'GBK');
-        let name = $('#mlfy_main_text h1').text().split(' ')[0]
-        let title = `第一章 ${$('#mlfy_main_text h1').text().split(' ')[1]}`
+        const [_, name, tl] = $('#mlfy_main_text h1').text().match(/([^\s]+)\s(.+)/)
+        if(nm !== name) {
+            index = 1
+            nm = name
+        }
+        const title = `第${index}章 ${tl}`
         console.log('爬取目录：' + name + ' ' +title);
         const wr = fs.createWriteStream(`./欢迎来到实力至上主义的教室/${name}.txt`, {
             flags: 'a'
@@ -52,7 +56,7 @@ async function getBookContent(url, contentLog = false) {
             contentLog && console.log(item.children[0].data);
         })
         //爬取速度过快 会被服务端封IP，这里必须将主线程挂起 降低爬取速度
-        await sleep(2000)
+        await sleep(800)
     }  
     // })    
 }
